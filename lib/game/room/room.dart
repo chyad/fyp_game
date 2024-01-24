@@ -15,7 +15,6 @@ import 'package:fyp_game/game/entity/obstacle.dart';
 import 'package:fyp_game/game/entity/platform.dart';
 import 'package:fyp_game/game/entity/player.dart';
 import 'package:fyp_game/game/game.dart';
-import 'package:fyp_game/game/room/map.dart';
 
 class Room extends World with HasGameRef<FypGame> {
   late TiledComponent room;

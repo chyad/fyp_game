@@ -1,6 +1,5 @@
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp_game/game/entity/player.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 

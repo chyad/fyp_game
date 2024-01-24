@@ -128,7 +128,7 @@ class _StroopEffectGameState extends State<StroopEffectGame> {
                     checkAnswer(position);
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: backgroundColor,
+                    backgroundColor: backgroundColor,
                     maximumSize: const Size(5, 5),
                     minimumSize: const Size(5, 5),
                     shape: RoundedRectangleBorder(
@@ -137,7 +137,7 @@ class _StroopEffectGameState extends State<StroopEffectGame> {
                   ),
                   child: Text(
                     colorNames[position],
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,

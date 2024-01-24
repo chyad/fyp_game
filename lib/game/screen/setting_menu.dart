@@ -4,7 +4,7 @@ import 'package:fyp_game/game/hive_gamedata/setting.dart';
 import 'package:provider/provider.dart';
 
 class SettingsMenu extends StatelessWidget {
-  const SettingsMenu({Key? key}) : super(key: key);
+  const SettingsMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
