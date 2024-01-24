@@ -30,7 +30,9 @@ class Room extends World with HasGameRef<FypGame> {
     room = await TiledComponent.load('$roomName.tmx', Vector2.all(16));
 
     randMap(room, seed: 0);
-    randMap(room, seed: 0);
+    if (Random().nextBool()) {
+      randMap(room, seed: 0);
+    }
 
     game.linkedList.add(room);
 
@@ -58,32 +60,32 @@ class Room extends World with HasGameRef<FypGame> {
   void spawnActors(TiledComponent level) {
     final tileMap = level.tileMap;
 
-    final obstaclesLayer = tileMap.getLayer<ObjectGroup>('Obstacle');
+    // final obstaclesLayer = tileMap.getLayer<ObjectGroup>('Obstacle');
 
-    if (obstaclesLayer != null) {
-      for (final collision in obstaclesLayer.objects) {
-        switch (collision.class_) {
-          case 'Border': // later use
-            final block = Obstacle(
-              position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width, collision.height),
-              isBorder: true,
-              images: game.images,
-            );
-            add(block);
-            break;
+    // if (obstaclesLayer != null) {
+    //   for (final collision in obstaclesLayer.objects) {
+    //     switch (collision.class_) {
+    //       case 'Border': // later use
+    //         final block = Obstacle(
+    //           position: Vector2(collision.x, collision.y),
+    //           size: Vector2(collision.width, collision.height),
+    //           isBorder: true,
+    //           images: game.images,
+    //         );
+    //         add(block);
+    //         break;
 
-          default:
-            final block = Obstacle(
-              position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width, collision.height),
-              images: game.images,
-            );
-            add(block);
-            break;
-        }
-      }
-    }
+    //       default:
+    //         final block = Obstacle(
+    //           position: Vector2(collision.x, collision.y),
+    //           size: Vector2(collision.width, collision.height),
+    //           images: game.images,
+    //         );
+    //         add(block);
+    //         break;
+    //     }
+    //   }
+    // }
 
     final spawnPointLayer = tileMap.getLayer<ObjectGroup>('Actor');
 

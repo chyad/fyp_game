@@ -14,33 +14,29 @@ class PauseMenu extends StatelessWidget {
       backgroundColor: Colors.black.withAlpha(100),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'hp : ${game.player.hp}',
-                      style: TextStyle(fontSize: 36),
-                    ),
-                    Text(
-                      'size : ${game.player.size}',
+                      'temp',
                       style: TextStyle(fontSize: 36),
                     ),
                   ],
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       'hp : ${game.player.hp}',
                       style: TextStyle(fontSize: 36),
                     ),
                     Text(
-                      'size : ${game.player.size}',
+                      'size : ${game.player.sizeOffset}',
                       style: TextStyle(fontSize: 36),
                     ),
                   ],
