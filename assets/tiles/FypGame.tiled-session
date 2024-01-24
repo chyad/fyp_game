@@ -1,0 +1,75 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "room_03.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "FypGame.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "room_01.tmx": {
+            "expandedObjectLayers": [
+                4,
+                3
+            ],
+            "scale": 0.72,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 479.86111111111114,
+                "y": 479.8611111111111
+            }
+        },
+        "room_02.tmx": {
+            "expandedObjectLayers": [
+                5,
+                3
+            ],
+            "scale": 1.5,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 315.6666666666667,
+                "y": 132.33333333333331
+            }
+        },
+        "room_03.tmx": {
+            "expandedObjectLayers": [
+                4,
+                3
+            ],
+            "scale": 0.5,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 533,
+                "y": 409
+            }
+        }
+    },
+    "last.imagePath": "/Users/yuench/Desktop/fyp_game/assets/images/Terrain",
+    "map.height": 40,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 80,
+    "openFiles": [
+        "FypGame.tsx",
+        "room_01.tmx",
+        "room_02.tmx",
+        "room_03.tmx"
+    ],
+    "project": "FypGame.tiled-project",
+    "recentFiles": [
+        "FypGame.tsx",
+        "room_01.tmx",
+        "room_02.tmx",
+        "room_03.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
