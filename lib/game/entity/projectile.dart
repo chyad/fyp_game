@@ -15,7 +15,8 @@ class Projectile extends SpriteAnimationComponent
   late double shadowOffsetY;
 
 // Speed of the bullet. // pass from data later
-  final double speed = 150;
+  late double speed = 150;
+  late double range;
 
   Projectile(
     Image image, {
@@ -24,12 +25,15 @@ class Projectile extends SpriteAnimationComponent
     required Vector2? size,
     required this.direction,
     required this.shadowOffsetY,
+    //
+    this.speed = 150,
+    this.range = 150,
   }) : super.fromFrameData(
           image,
           SpriteAnimationData.sequenced(
-            amount: 5,
-            stepTime: 0.2,
-            textureSize: Vector2.all(96),
+            amount: 17,
+            stepTime: .05,
+            textureSize: Vector2.all(32),
           ),
           position: position,
           size: size,
@@ -128,5 +132,37 @@ class Projectile extends SpriteAnimationComponent
   void onRemove() {
     shade.removeFromParent();
     super.onRemove();
+  }
+
+  void removeAnimation() {
+    speed *= 0.2;
+    speed.clamp(1, 100);
+
+    animation = SpriteAnimation.fromFrameData(
+        game.images.fromCache('Main Characters/Desappearing(96x96).png'),
+        SpriteAnimationData.sequenced(
+          amount: 7,
+          stepTime: 0.1,
+          textureSize: Vector2.all(96),
+          loop: false,
+        ));
+
+    add(
+      OpacityEffect.fadeOut(
+        LinearEffectController(0.1),
+        onComplete: () {
+          add(RemoveEffect());
+        },
+      ),
+    );
+
+    shade.add(
+      OpacityEffect.fadeOut(
+        LinearEffectController(0.1),
+        onComplete: () {
+          add(RemoveEffect());
+        },
+      ),
+    );
   }
 }

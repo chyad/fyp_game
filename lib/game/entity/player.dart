@@ -47,7 +47,6 @@ class Player extends Actor with KeyboardHandler {
   late SpriteComponent hand;
   late SpriteComponent hat;
 
-
   // spinning use, no use for now
   Vector2 get forward => Vector2(0, -1)..rotate(angle);
   double angularSpeed = 2;
@@ -91,7 +90,6 @@ class Player extends Actor with KeyboardHandler {
     size *= sizeOffset;
     size.clamp(Vector2.all(16), Vector2.all(128));
     print(hp);
-
 
     // lastPosition = position;
 
@@ -167,8 +165,6 @@ class Player extends Actor with KeyboardHandler {
       //     angularSpeed * dt)!;
 
       velocity = game.joystickMovement.relativeDelta;
-      size += Vector2(1, 1);
-      sizeOffset += .1;
       // lastFacingDirection = game.joystickMovement.relativeDelta;
     } else {
       angle = 0;
@@ -247,7 +243,7 @@ class Player extends Actor with KeyboardHandler {
 
   void projectileAttack() {
     Projectile projectile = Projectile(
-      game.images.fromCache('Main Characters/Appearing (96x96).png'),
+      game.images.fromCache('Items/Fruits/Apple.png'),
       size: Vector2.all(16 * bulletSize),
       position: position.clone() -
           Vector2(0, (size.x.clamp(hitboxMin, hitboxMax / 2) / 2)),
