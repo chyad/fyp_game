@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fyp_game/game/entity/actor.dart';
 import 'package:fyp_game/game/game.dart';
 import 'package:fyp_game/game/screen/main_menu.dart';
+import 'package:fyp_game/game/screen/setting_menu.dart';
 
 class PauseMenu extends StatelessWidget {
   static const id = 'PauseMenu';
@@ -19,24 +21,29 @@ class PauseMenu extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Row(
+                Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'temp',
+                      'temp, map maybe',
                       style: TextStyle(fontSize: 36),
                     ),
+                    _getListWidgets(game.player.status),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
-                      'hp : ${game.player.hp}',
+                      'hp: ${game.player.hp}',
                       style: TextStyle(fontSize: 36),
                     ),
                     Text(
-                      'size : ${game.player.sizeOffset}',
+                      'size: ${game.player.sizeOffset}',
+                      style: TextStyle(fontSize: 36),
+                    ),
+                    Text(
+                      'move speed: ${game.player.moveSpeed}',
                       style: TextStyle(fontSize: 36),
                     ),
                   ],
@@ -62,7 +69,13 @@ class PauseMenu extends StatelessWidget {
                   width: game.fixedResolution.x * 0.2,
                   height: game.fixedResolution.y * 0.1,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsMenu(),
+                        ),
+                      );
+                    },
                     child: const Text('Setting'),
                   ),
                 ),
@@ -99,6 +112,28 @@ class PauseMenu extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _getListWidgets(Map map) {
+    return Column(
+      children: map.entries
+          .map(
+            (e) => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text(
+                  "${e.key}:",
+                  style: TextStyle(fontSize: 36),
+                ),
+                Text(
+                  "${e.value}",
+                  style: TextStyle(fontSize: 36),
+                ),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 }

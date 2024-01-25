@@ -37,7 +37,7 @@ class Player extends Actor with KeyboardHandler {
     super.hp = 100,
     super.sizeOffset = 1,
     //
-    super.bulletSize = 16,
+    super.bulletSize = 1,
     super.bulletSpeed,
   });
 
@@ -87,9 +87,14 @@ class Player extends Actor with KeyboardHandler {
     //   isSolid: true,
     // ));
 
+    size = Vector2.all(32);
     size *= sizeOffset;
+
     size.clamp(Vector2.all(16), Vector2.all(128));
     print(hp);
+
+    status['hp'] = hp;
+    print(status);
 
     // lastPosition = position;
 

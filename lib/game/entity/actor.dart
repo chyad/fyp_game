@@ -24,6 +24,14 @@ class Actor extends SpriteAnimationGroupComponent
   //
   late double vision;
 
+  Map status = {
+    'hp': 10,
+    'sizeOffset': 1,
+    'moveSpeed': 100,
+    'bulletSize': 1,
+    'bulletSpeed': 150,
+  };
+
   Actor({
     super.position,
     super.anchor = Anchor.bottomCenter,

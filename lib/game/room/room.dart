@@ -29,6 +29,8 @@ class Room extends World with HasGameRef<FypGame> {
   FutureOr<void> onLoad() async {
     room = await TiledComponent.load('$roomName.tmx', Vector2.all(16));
 
+    game.map = room;
+
     randMap(room, seed: 0);
     if (Random().nextBool()) {
       randMap(room, seed: 0);
@@ -38,7 +40,7 @@ class Room extends World with HasGameRef<FypGame> {
 
     game.linkedList.printList();
 
-    print(this);
+    print('room $this');
 
     add(room);
 

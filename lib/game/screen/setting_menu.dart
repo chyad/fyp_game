@@ -12,6 +12,7 @@ class SettingsMenu extends StatelessWidget {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          
           children: [
             // Game title.
             const Padding(
@@ -61,8 +62,6 @@ class SettingsMenu extends StatelessWidget {
                 );
               },
             ),
-
-
 
             // Back button.
             SizedBox(

@@ -38,7 +38,7 @@ class Door extends SpriteComponent
     bool roomClear =
         game.cam.world!.children.whereType<Enemy>().isNotEmpty ? false : true;
 
-    if (other is Player || roomClear) {
+    if (other is Player && roomClear) {
       // AudioManager.playSfx('Blop_1.wav');
 
       game.player.updateData();
@@ -48,7 +48,8 @@ class Door extends SpriteComponent
 
       // game.loadRoom2(game.linkedList.head!.value);
       // game.loadRoom2(game.roomTemp);
-      game.loadRoom('room_02');
+      // game.loadRoom('room_02');
+      game.loadRoom2();
 
       // onPlayerEnter?.call();
     }
