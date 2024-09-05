@@ -7,8 +7,8 @@ part 'player_data.g.dart';
 // might want to store for tracking player progress.
 @HiveType(typeId: 0)
 class PlayerData extends ChangeNotifier with HiveObjectMixin {
-  static const String playerDataBox = 'PlayerDataBox';
-  static const String playerDataKey = 'PlayerData';
+  static const String playerDataBox = 'PlayerData11Box';
+  static const String playerDataKey = 'PlayerData11';
 
   // The spaceship type of player's current spaceship.
   @HiveField(0)
@@ -16,6 +16,9 @@ class PlayerData extends ChangeNotifier with HiveObjectMixin {
 
   @HiveField(1)
   double hp;
+
+  @HiveField(10)
+  double attack;
 
   @HiveField(2)
   double sizeOffset;
@@ -29,8 +32,11 @@ class PlayerData extends ChangeNotifier with HiveObjectMixin {
   @HiveField(5)
   double bulletSpeed;
 
+  @HiveField(9)
+  double bulletRange;
+
   @HiveField(6)
-  final List<ItemType> itemCount;
+  List<String> powerup;
 
   // Highest player score so far.
   @HiveField(7)
@@ -60,13 +66,15 @@ class PlayerData extends ChangeNotifier with HiveObjectMixin {
   PlayerData({
     required this.character,
     required this.hp,
+    required this.attack,
     required this.sizeOffset,
     required this.moveSpeed,
     //
     required this.bulletSize,
     required this.bulletSpeed,
+    required this.bulletRange,
     //
-    required this.itemCount,
+    required this.powerup,
     int highScore = 0,
     required this.money,
   }) {
@@ -76,15 +84,17 @@ class PlayerData extends ChangeNotifier with HiveObjectMixin {
   /// Creates a new instance of [PlayerData] from given map.
   PlayerData.fromMap(Map<String, dynamic> map)
       : character = map['charater'],
+        sizeOffset = map['sizeOffset'],
         //
         hp = map['hp'],
-        sizeOffset = map['sizeOffset'],
+        attack = map['attack'],
         moveSpeed = map['moveSpeed'],
         //
         bulletSize = map['bulletSize'],
         bulletSpeed = map['bulletSpeed'],
+        bulletRange = map['bulletRange'],
         //
-        itemCount = map['item'].map((e) => e as ItemType).cast<ItemType>().toList(),
+        powerup = [],
         _highScore = map['highScore'],
         money = map['money'];
 
@@ -93,17 +103,19 @@ class PlayerData extends ChangeNotifier with HiveObjectMixin {
   // for the first time.
   static Map<String, dynamic> defaultData = {
     'charater': 'Ninja Frog',
-    //
-    'hp': 10.0,
     'sizeOffset': 1.0,
-    'moveSpeed': 100.0,
+    //
+    'hp': 100.0,
+    'attack': 10.0,
+    'moveSpeed': 200.0,
     //
     'bulletSize': 1.0,
     'bulletSpeed': 150.0,
+    'bulletRange': 400.0,
     //
     'item': [],
     'highScore': 0,
-    'money':0,
+    'money': 0,
   };
 
   // /// Returns true if given [SpaceshipType] is owned by player.

@@ -1,5 +1,6 @@
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
+import 'package:fyp_game/game/screen/splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,7 @@ import 'package:fyp_game/game/hive_gamedata/setting.dart';
 
 import 'package:fyp_game/game/screen/main_menu.dart';
 
+final mapHive = ValueNotifier<bool>(false);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -17,70 +19,14 @@ void main() async {
 
   await initHive();
 
-  runApp(MultiProvider(
-    providers: [
-      FutureProvider<PlayerData>(
-          create: (BuildContext context) => getPlayerData(),
-          initialData: PlayerData.fromMap(PlayerData.defaultData)),
-      FutureProvider<Settings>(
-          create: (BuildContext context) => getSettings(),
-          initialData: Settings(soundEffects: false, backgroundMusic: false))
-    ],
-    builder: (context, child) {
-      return MultiProvider(
-        providers: [
-          ChangeNotifierProvider<PlayerData>.value(
-            value: Provider.of<PlayerData>(context),
-          ),
-          ChangeNotifierProvider<Settings>.value(
-            value: Provider.of<Settings>(context),
-          ),
-        ],
-        child: child,
-      );
-    },
-    child: MaterialApp(
-      debugShowCheckedModeBanner: false,
-      // Dark more because we are too cool for white theme.
-      themeMode: ThemeMode.dark,
-      // Use custom theme with 'BungeeInline' font.
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: 'BungeeInline',
-        scaffoldBackgroundColor: Colors.white.withAlpha(10),
-      ),
-      // MainMenu will be the first screen for now.
-      // But this might change in future if we decide
-      // to add a splash screen.
-      home: const MainMenu(),
-    ),
-  ));
+  runApp(const MyApp());
 
-  // runApp(
-  //   MaterialApp(
-  //     title: 'game123',
-  //     theme: ThemeData(primarySwatch: Colors.blue),
-  //     home: Scaffold(
-  //       backgroundColor: Colors.blue,
-  //       body: GameWidget<FypGame>(
-  //         game: (kDebugMode ? FypGame() : game),
-  //         overlayBuilderMap: {
-  //           // MainMenu.id: (context, game) => MainMenu(game: game),
-  //           PauseMenu.id: (context, game) => PauseMenu(game: game),
-  //         },
-  //       ),
-  //     ),
-  //   ),
-  // );
 }
 
 Future<Settings> getSettings() async {
   final box = await Hive.openBox<Settings>(Settings.settingsBox);
   final settings = box.get(Settings.settingsKey);
 
-  // If settings is null, it means this is a fresh launch
-  // of the game. In such case, we first store the default
-  // settings in the settings box and then return the same.
   if (settings == null) {
     box.put(Settings.settingsKey,
         Settings(soundEffects: true, backgroundMusic: true));
@@ -89,13 +35,33 @@ Future<Settings> getSettings() async {
   return box.get(Settings.settingsKey)!;
 }
 
+Future<HiveMapda> getHiveMap() async {
+  final box = await Hive.openBox<HiveMapda>(HiveMapda.hiveMapBox);
+
+  final hiveMap = box.get(HiveMapda.hiveMapKey);
+
+  if (hiveMap == null) {
+    box.put(
+        HiveMapda.hiveMapKey,
+        HiveMapda(
+          map: [],
+          currentX: 0,
+          currentY: 0,
+          playerPos: [],
+        ));
+  }
+
+  print('map box');
+
+  mapHive.value = true;
+
+  return box.get(HiveMapda.hiveMapKey)!;
+}
+
 Future<PlayerData> getPlayerData() async {
   final box = await Hive.openBox<PlayerData>(PlayerData.playerDataBox);
   final playerData = box.get(PlayerData.playerDataKey);
 
-  // If player data is null, it means this is a fresh launch
-  // of the game. In such case, we first store the default
-  // player data in the player data box and then return the same.
   if (playerData == null) {
     box.put(
       PlayerData.playerDataKey,
@@ -108,7 +74,64 @@ Future<PlayerData> getPlayerData() async {
 Future<void> initHive() async {
   await Hive.initFlutter();
 
-  Hive.registerAdapter(PlayerDataAdapter());
-  Hive.registerAdapter(GameMapAdapter());
-  Hive.registerAdapter(SettingsAdapter());
+  Hive.ignoreTypeId(3);
+
+  Hive.registerAdapter<HiveRoom2>(HiveRoom2Adapter());
+  Hive.registerAdapter<HiveEntity>(HiveEntityAdapter());
+
+  Hive.registerAdapter<PlayerData>(PlayerDataAdapter());
+  Hive.registerAdapter<HiveMapda>(HiveMapdaAdapter());
+  Hive.registerAdapter<Settings>(SettingsAdapter());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        FutureProvider<PlayerData>(
+            create: (BuildContext context) => getPlayerData(),
+            initialData: PlayerData.fromMap(PlayerData.defaultData)),
+        FutureProvider<HiveMapda>(
+            create: (BuildContext context) => getHiveMap(),
+            initialData: HiveMapda(
+              map: [],
+              currentX: 0,
+              currentY: 0,
+              playerPos: [0.0],
+            )),
+        FutureProvider<Settings>(
+            create: (BuildContext context) => getSettings(),
+            initialData: Settings(soundEffects: false, backgroundMusic: false)),
+      ],
+      builder: (context, child) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PlayerData>.value(
+              value: Provider.of<PlayerData>(context),
+            ),
+            ChangeNotifierProvider<HiveMapda>.value(
+              value: Provider.of<HiveMapda>(context),
+            ),
+            ChangeNotifierProvider<Settings>.value(
+              value: Provider.of<Settings>(context),
+            ),
+          ],
+          child: child,
+        );
+      },
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          fontFamily: 'BungeeInline',
+          scaffoldBackgroundColor: Colors.white.withAlpha(10),
+        ),
+        home: const SplashScreen(),
+      ),
+    );
+  }
 }

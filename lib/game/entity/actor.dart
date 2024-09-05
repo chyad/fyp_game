@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -8,28 +9,34 @@ import 'package:fyp_game/game/entity/enemy.dart';
 import 'package:fyp_game/game/entity/mixin.dart';
 import 'package:fyp_game/game/entity/obstacle.dart';
 import 'package:fyp_game/game/entity/player.dart';
+import 'package:fyp_game/game/entity/projectile_function/enemy_projectile.dart';
+import 'package:fyp_game/game/entity/static_entity/wall_border.dart';
 import 'package:fyp_game/game/game.dart';
 
-enum PlayerState { idle, running, dead, testse }
+enum PlayerState { idle, running, dead, fall }
 
 class Actor extends SpriteAnimationGroupComponent
     with ShadowOffset, SpriteData, HasGameRef<FypGame>, CollisionCallbacks {
   late String character;
+  late double sizeOffset;
   //
   late double hp;
-  late double sizeOffset;
+  late double attack;
   late double moveSpeed;
   late double bulletSize;
   late double bulletSpeed;
+  late double bulletRange;
   //
   late double vision;
 
   Map status = {
-    'hp': 10,
-    'sizeOffset': 1,
-    'moveSpeed': 100,
+    'hp': 100,
+    'attack': 10,
+    'moveSpeed': 150,
+    //
     'bulletSize': 1,
     'bulletSpeed': 150,
+    'bulletRange': 300,
   };
 
   Actor({
@@ -39,14 +46,16 @@ class Actor extends SpriteAnimationGroupComponent
     super.size,
     //
     this.character = 'Mask Dude',
-    //
-    this.hp = 10,
     this.sizeOffset = 1,
-    this.moveSpeed = 100,
-    this.bulletSize = 16,
-    this.bulletSpeed = 150,
     //
-    this.vision = 250,
+    this.hp = 100,
+    this.attack = 10,
+    this.moveSpeed = 150,
+    this.bulletSize = 1,
+    this.bulletSpeed = 150,
+    this.bulletRange = 300,
+    //
+    this.vision = 200,
   });
 
   Vector2 velocity = Vector2.zero();
@@ -66,7 +75,7 @@ class Actor extends SpriteAnimationGroupComponent
 
   @override
   FutureOr<void> onLoad() async {
-    debugMode = true;
+    // debugMode = true;
 
     lastPosition = position.clone();
 
@@ -98,7 +107,7 @@ class Actor extends SpriteAnimationGroupComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (!(hp <= 0 && isFalling)) {
-      if (other is Actor || other is Obstacle) {
+      if (other is Actor || other is Obstacle || other is WallBorder) {
         // copy from internet, may modify later
         // print(other);
         if (intersectionPoints.length == 2) {
@@ -112,8 +121,8 @@ class Actor extends SpriteAnimationGroupComponent
           final separationDistanceX =
               (size.x.clamp(hitboxMin, hitboxMax) / 2 * hitboxOffsetX) -
                   collisionNormal.length;
-          final separationDistanceY =
-              (size.y / 2 * hitboxOffsetY) - collisionNormal.length;
+          // final separationDistanceY =
+          //     (size.y / 2 * hitboxOffsetY) - collisionNormal.length;
 
           collisionNormal.normalize();
 
@@ -133,7 +142,7 @@ class Actor extends SpriteAnimationGroupComponent
           //     collisionNormal.y * separationDistanceY);
 
           // move obs pos
-          if (other is Obstacle && !other.isBorder) {
+          if (other is Obstacle && !other.unmovable) {
             other.position -= collisionNormal.scaled(separationDistanceX);
           }
         }
@@ -177,6 +186,14 @@ class Actor extends SpriteAnimationGroupComponent
           },
         ),
       );
+
+      
+    }
+
+    if (this is Player) {
+      if (isFalling) {
+        playerState = PlayerState.fall;
+      }
     }
 
     current = playerState;
@@ -190,7 +207,15 @@ class Actor extends SpriteAnimationGroupComponent
         game.images.fromCache('Main Characters/Desappearing(96x96).png'),
         SpriteAnimationData.sequenced(
           amount: 7,
-          stepTime: 0.1,
+          stepTime: 0.15,
+          textureSize: Vector2.all(96),
+          loop: false,
+        ));
+    fallAnimation = SpriteAnimation.fromFrameData(
+        game.images.fromCache('Main Characters/Desappearing(96x96).png'),
+        SpriteAnimationData.sequenced(
+          amount: 7,
+          stepTime: 0.2,
           textureSize: Vector2.all(96),
           loop: false,
         ));
@@ -200,6 +225,7 @@ class Actor extends SpriteAnimationGroupComponent
       PlayerState.idle: idleAnimation,
       PlayerState.running: runAnimation,
       PlayerState.dead: removeAnimation,
+      PlayerState.fall: fallAnimation,
     };
 
     // set current animation

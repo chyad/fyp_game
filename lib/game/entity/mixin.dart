@@ -43,6 +43,8 @@ mixin SpriteData {
   late SpriteAnimation idleAnimation;
   late SpriteAnimation runAnimation;
   late SpriteAnimation removeAnimation;
+
+  late SpriteAnimation fallAnimation;
 }
 
 mixin ShadowOffset on PositionComponent {

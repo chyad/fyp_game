@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "608212329809",
+    "project_id": "fyp2-259f2",
+    "storage_bucket": "fyp2-259f2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608212329809:android:81b936c45375b388259f70",
+        "android_client_info": {
+          "package_name": "com.example.fireb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTWaooyA3qY3wREp6fhQszLrVtE1pJ_ms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608212329809:android:b408e4e5ba4e4c83259f70",
+        "android_client_info": {
+          "package_name": "com.example.fyp_game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTWaooyA3qY3wREp6fhQszLrVtE1pJ_ms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

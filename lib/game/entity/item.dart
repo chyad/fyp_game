@@ -11,27 +11,25 @@ import 'package:fyp_game/game/entity/player.dart';
 import 'package:fyp_game/game/game.dart';
 
 enum Fruit {
-  Apple,
-  Bananas,
-  Kiwi,
+  coin,
+  gem1,
+  gem2,
+  gem3,
 }
 
 class Item extends SpriteAnimationComponent
     with CollisionCallbacks, HasGameRef<FypGame> {
   List<Fruit> fruits = Fruit.values;
 
-  Images images;
-
   Item({
     super.position,
     super.anchor = Anchor.center,
-    required this.images,
     Vector2? size,
     Vector2? scale,
     double? angle,
     super.priority = 10000,
   }) : super(
-          size: Vector2.all(32),
+          size: Vector2.all(16),
         );
 
   String itemType = '';
@@ -46,20 +44,17 @@ class Item extends SpriteAnimationComponent
     itemType = randomFruit.name;
 
     animation = SpriteAnimation.fromFrameData(
-        images.fromCache('Items/Fruits/${randomFruit.name}.png'),
+        game.images.fromCache('Gems/${randomFruit.name}.png'),
         SpriteAnimationData.sequenced(
-          amount: 17,
-          stepTime: .05,
-          textureSize: Vector2.all(32),
+          amount: 7,
+          stepTime: .1,
+          textureSize: Vector2.all(16),
         ));
-
-    print('1 :$itemType');
-    print('Items/Fruits/${randomFruit.name}.png');
 
     add(CircleHitbox(
       anchor: Anchor.center,
       position: Vector2(width / 2, height / 2),
-      radius: (height / 2 * 0.5),
+      radius: height * 0.6,
     )..collisionType = CollisionType.passive);
 
     await add(
@@ -82,17 +77,18 @@ class Item extends SpriteAnimationComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is Player) {
       // sfx
+      game.audio.playSfx('pickupCoin.wav');
+      other.money +=150;
+      other.updateHP(0);
 
       animation = SpriteAnimation.fromFrameData(
-          images.fromCache('Items/Fruits/Collected.png'),
+          game.images.fromCache('Items/Fruits/Collected.png'),
           SpriteAnimationData.sequenced(
             amount: 6,
             stepTime: 0.05,
             textureSize: Vector2.all(32),
             loop: false,
           ));
-
-      // size = Vector2.all(48);
 
       add(
         OpacityEffect.fadeOut(
@@ -102,9 +98,6 @@ class Item extends SpriteAnimationComponent
           },
         ),
       );
-
-      // data ...
-      // item count ++ etc
     }
 
     super.onCollisionStart(intersectionPoints, other);

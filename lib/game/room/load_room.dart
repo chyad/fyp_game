@@ -14,13 +14,12 @@ class AddRoom extends World {
   });
 
   @override
-  FutureOr<void> onLoad() {
+  Future<FutureOr<void>> onLoad() async {
     add(room);
 
     for (var element in entityList) {
-      add(element);
+        add(element);
     }
 
-    return super.onLoad();
   }
 }

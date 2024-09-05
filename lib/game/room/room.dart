@@ -8,6 +8,7 @@ import 'package:flame/game.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 
 import 'package:flutter/material.dart';
+import 'package:fyp_game/game/entity/area_effect.dart';
 import 'package:fyp_game/game/entity/door.dart';
 import 'package:fyp_game/game/entity/enemy.dart';
 import 'package:fyp_game/game/entity/item.dart';
@@ -23,22 +24,11 @@ class Room extends World with HasGameRef<FypGame> {
 
   late Rect roomBounds;
 
-  Room({this.roomName = 'room_02'});
+  Room({this.roomName = 'room_03'});
 
   @override
   FutureOr<void> onLoad() async {
     room = await TiledComponent.load('$roomName.tmx', Vector2.all(16));
-
-    game.map = room;
-
-    randMap(room, seed: 0);
-    if (Random().nextBool()) {
-      randMap(room, seed: 0);
-    }
-
-    game.linkedList.add(room);
-
-    game.linkedList.printList();
 
     print('room $this');
 
@@ -62,32 +52,30 @@ class Room extends World with HasGameRef<FypGame> {
   void spawnActors(TiledComponent level) {
     final tileMap = level.tileMap;
 
-    // final obstaclesLayer = tileMap.getLayer<ObjectGroup>('Obstacle');
+    final obstaclesLayer = tileMap.getLayer<ObjectGroup>('Obstacle');
 
-    // if (obstaclesLayer != null) {
-    //   for (final collision in obstaclesLayer.objects) {
-    //     switch (collision.class_) {
-    //       case 'Border': // later use
-    //         final block = Obstacle(
-    //           position: Vector2(collision.x, collision.y),
-    //           size: Vector2(collision.width, collision.height),
-    //           isBorder: true,
-    //           images: game.images,
-    //         );
-    //         add(block);
-    //         break;
+    if (obstaclesLayer != null) {
+      for (final collision in obstaclesLayer.objects) {
+        switch (collision.class_) {
+          case 'Border': // later use
+            final block = Obstacle(
+              position: Vector2(collision.x, collision.y),
+              size: Vector2(collision.width, collision.height),
+              unmovable: true,
+            );
+            add(block);
+            break;
 
-    //       default:
-    //         final block = Obstacle(
-    //           position: Vector2(collision.x, collision.y),
-    //           size: Vector2(collision.width, collision.height),
-    //           images: game.images,
-    //         );
-    //         add(block);
-    //         break;
-    //     }
-    //   }
-    // }
+          default:
+            final block = Obstacle(
+              position: Vector2(collision.x, collision.y),
+              size: Vector2(collision.width, collision.height),
+            );
+            add(block);
+            break;
+        }
+      }
+    }
 
     final spawnPointLayer = tileMap.getLayer<ObjectGroup>('Actor');
 
@@ -117,19 +105,28 @@ class Room extends World with HasGameRef<FypGame> {
 
           case 'Item':
             final item = Item(
-              images: game.images,
               position: Vector2(spawnPoint.x, spawnPoint.y),
             );
             add(item);
             break;
 
           case 'Door': // temp, should use for level (room) switching later
+          case 'puzzle':
             final door = Door(
               position: Vector2(spawnPoint.x, spawnPoint.y),
               size: Vector2.all(24),
               priority: spawnPoint.y.floor(),
             );
             add(door);
+            break;
+
+          case 'area':
+            final area = AreaEffect(
+                position: Vector2(spawnPoint.x, spawnPoint.y),
+                size: Vector2.all(24),
+                type: 'Collected',
+                duration: 30000);
+            add(area);
             break;
           default:
         }
@@ -142,9 +139,9 @@ class Room extends World with HasGameRef<FypGame> {
     game.cam.setBounds(
       Rectangle.fromLTRB(
         game.fixedResolution.x / 2,
-        game.fixedResolution.y / 2,
+        game.fixedResolution.y,
         room.width - game.fixedResolution.x / 2,
-        room.height - game.fixedResolution.y / 2,
+        room.height - game.fixedResolution.y,
       ),
     );
   }
@@ -191,8 +188,7 @@ class Room extends World with HasGameRef<FypGame> {
           final block = Obstacle(
             position: Vector2(x * 16, y * 16),
             size: Vector2(16, 16),
-            isBorder: true,
-            images: game.images,
+            unmovable: true,
           );
           add(block);
         } else {
@@ -218,8 +214,8 @@ class Room extends World with HasGameRef<FypGame> {
         '${count0 / (room.tileMap.map.width * room.tileMap.map.height)}, ${count1 / (room.tileMap.map.width * room.tileMap.map.height)}, ${count2 / (room.tileMap.map.width * room.tileMap.map.height)}');
   }
 
-  void randMap(TiledComponent<FlameGame<World>> room, {int seed = 0}) {
-    final random = (seed == 0) ? Random() : Random(seed);
+  void randMap(TiledComponent<FlameGame<World>> room, {int seed = -1}) {
+    final random = (seed == -1) ? Random() : Random(seed);
 
     int minSectionWidth =
         random.nextInt(7 - 2) + 2; // range 2 to 7 until moving edges
@@ -335,8 +331,7 @@ class Room extends World with HasGameRef<FypGame> {
               priority:
                   (sideX ? (sideY ? room.tileMap.map.height - 1 - y : y) : x) *
                       16,
-              isBorder: random.nextBool() ? true : false,
-              images: game.images,
+              unmovable: random.nextBool() ? true : false,
             );
             add(block);
           }

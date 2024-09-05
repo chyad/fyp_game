@@ -8,11 +8,12 @@ class SettingsMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(
+        'mainmenu ${Provider.of<Settings>(context, listen: false).backgroundMusic}, ${Provider.of<Settings>(context, listen: false).soundEffects}');
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          
           children: [
             // Game title.
             const Padding(

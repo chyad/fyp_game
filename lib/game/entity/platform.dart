@@ -41,3 +41,40 @@ class GamePlatform extends PositionComponent with CollisionCallbacks {
     super.onCollisionEnd(other);
   }
 }
+
+class FallPlatform extends PositionComponent with CollisionCallbacks {
+  FallPlatform({
+    super.position,
+    super.size,
+  });
+
+  @override
+  FutureOr<void> onLoad() async {
+    // debugMode = true;
+    await add(RectangleHitbox(
+      collisionType: CollisionType.passive,
+      isSolid: true,
+    ));
+
+    return super.onLoad();
+  }
+
+  @override
+  void onCollisionStart(
+      Set<Vector2> intersectionPoints, PositionComponent other) {
+    if (other is Player) {
+      other.touchingGround -= 1;
+    }
+
+    super.onCollisionStart(intersectionPoints, other);
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    if (other is Player) {
+      other.touchingGround += 1;
+    }
+
+    super.onCollisionEnd(other);
+  }
+}

@@ -1,12 +1,19 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/services.dart';
 
 import 'package:fyp_game/game/entity/actor.dart';
+import 'package:fyp_game/game/entity/function_mapping/cd.dart';
 import 'package:fyp_game/game/entity/projectile.dart';
 import 'package:fyp_game/game/hive_gamedata/player_data.dart';
+import 'package:fyp_game/game/hud/audio_component.dart';
+import 'package:fyp_game/game/overlay/game_over_menu.dart';
 import 'package:provider/provider.dart';
+
+import 'package:fyp_game/game/entity/projectile_function/enemy_projectile.dart';
 
 enum CDs {
   attack(
@@ -26,6 +33,8 @@ enum CDs {
   });
 }
 
+CDTimer actionsTimer = CDTimer();
+
 class Player extends Actor with KeyboardHandler {
   Player({
     super.position,
@@ -35,10 +44,6 @@ class Player extends Actor with KeyboardHandler {
     //
     super.character = 'Ninja Frog',
     super.hp = 100,
-    super.sizeOffset = 1,
-    //
-    super.bulletSize = 1,
-    super.bulletSpeed,
   });
 
   late PlayerData playerData;
@@ -53,7 +58,7 @@ class Player extends Actor with KeyboardHandler {
 
   // CDs
   double timer = 0;
-  double attackCD = 0.05;
+  double attackCD = 0.15;
 
   double invicTimer = 0;
   double invicCD = 0.8;
@@ -66,6 +71,11 @@ class Player extends Actor with KeyboardHandler {
   double horizontalMovement = 0;
   double verticalMovement = 0;
   Vector2 lastFacingDirection = Vector2(1, 0);
+
+  double moveSpeedAdjust = 1;
+
+  int money = 0;
+  List<String> powerup = [];
 
   @override
   FutureOr<void> onLoad() async {
@@ -86,6 +96,13 @@ class Player extends Actor with KeyboardHandler {
     //   anchor: Anchor.center,
     //   isSolid: true,
     // ));
+
+    // update hud hp bar etc
+
+    actionsTimer.initBehavior();
+    actionsTimer.resetTimer(Behavior.jump);
+
+    print('cd_temp: ${actionsTimer.cds}');
 
     size = Vector2.all(32);
     size *= sizeOffset;
@@ -110,16 +127,16 @@ class Player extends Actor with KeyboardHandler {
       anchor: Anchor.center,
     );
 
-    hand = SpriteComponent(
-      sprite: Sprite(
-        game.images.fromCache('Main Characters/$character/Fall (32x32).png'),
-        srcSize: Vector2.all(32),
-        srcPosition: Vector2(32 * 0, 0), // 0 to 6
-      ),
-      size: Vector2.all(16),
-      position: Vector2(0, height / 2), // width -> 0 item is on back
-      anchor: Anchor.center,
-    );
+    // hand = SpriteComponent(
+    //   sprite: Sprite(
+    //     game.images.fromCache('Main Characters/$character/Fall (32x32).png'),
+    //     srcSize: Vector2.all(32),
+    //     srcPosition: Vector2(32 * 0, 0), // 0 to 6
+    //   ),
+    //   size: Vector2.all(16),
+    //   position: Vector2(0, height / 2), // width -> 0 item is on back
+    //   anchor: Anchor.center,
+    // );
 
     // await addAll([hat, hand]);
 
@@ -127,37 +144,54 @@ class Player extends Actor with KeyboardHandler {
 
     playerData = Provider.of<PlayerData>(game.buildContext!, listen: false);
 
+    if (game.newGame) {
+      reset();
+      game.newGame = false;
+    }
+
+    setData(playerData);
+
+    updateHP(0);
+
     return super.onLoad();
   }
 
   @override
   void update(double dt) {
     // dt /= 4;
-
+    // deathCheck();
     _updatePlayerMovement(dt);
 
-    if (touchingGround <= 0 && timer > 0.5) {
+    if (touchingGround <= 0 && actionsTimer.isReady(Behavior.jump, 2)) {
+      print('fall');
       priority = -1;
-      // isFalling = true;
+      isFalling = true;
       timer = 0;
+      moveSpeedAdjust = 0.1;
     } else {}
 
-    if (touchingGround > 0 && !isFalling && updatetimer >= 3) {
+    if (touchingGround > 0 &&
+        !isFalling &&
+        actionsTimer.isReady(Behavior.updateLastPosition, 1)) {
+      // update last pos, reset timer
       lastPosition = position.clone();
-      updatetimer = 0;
-      print('pos update $lastPosition');
+      actionsTimer.resetTimer(Behavior.updateLastPosition);
     }
 
     if (isFalling) {
-      updatetimer = 0;
-      position.y += gravity * terminalVelocity * dt;
+      actionsTimer.resetTimer(Behavior.updateLastPosition);
+      // maybe try size effect to simulate falling
+      // position.y += gravity * 3 * dt;
+      fallTimer += dt;
+
       if (fallTimer >= 1.5) {
-        hp -= 5;
+        updateHP(-50);
+        moveSpeedAdjust = 1;
         fallTimer = 0;
         position = lastPosition;
         isFalling = false;
       }
-      fallTimer += dt;
+
       // print(' falling $position, $lastPosition');
     }
 
@@ -175,11 +209,10 @@ class Player extends Actor with KeyboardHandler {
       angle = 0;
     }
 
-    if (game.joystickAttack.isDragged && timer > attackCD) {
+    if (game.joystickAttack.isDragged &&
+        actionsTimer.isReady(Behavior.attack, attackCD)) {
       projectileAttack();
-
-      // cool down
-      timer = 0;
+      actionsTimer.resetTimer(Behavior.attack);
     }
 
     if (invicTimer > invicCD && invicible) {
@@ -192,48 +225,15 @@ class Player extends Actor with KeyboardHandler {
     updatetimer += dt;
     invicTimer += dt;
 
+    actionsTimer.updateTime(dt);
+
+    // print('cd_temp: ${actionsTimer.cds}');
+
     // for update sprite state
 
     // movement
-    position.add(velocity * moveSpeed * dt);
+    position.add(velocity * moveSpeed * dt * moveSpeedAdjust);
     super.update(dt);
-  }
-
-  @override
-  bool onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    horizontalMovement = 0;
-    verticalMovement = 0;
-
-    final isLeftKeyPressed = keysPressed.contains(LogicalKeyboardKey.keyA) ||
-        keysPressed.contains(LogicalKeyboardKey.arrowLeft);
-    final isRightKeyPressed = keysPressed.contains(LogicalKeyboardKey.keyD) ||
-        keysPressed.contains(LogicalKeyboardKey.arrowRight);
-
-    final isUpKeyPressed = keysPressed.contains(LogicalKeyboardKey.keyW) ||
-        keysPressed.contains(LogicalKeyboardKey.arrowUp);
-    final isDownKeyPressed = keysPressed.contains(LogicalKeyboardKey.keyS) ||
-        keysPressed.contains(LogicalKeyboardKey.arrowDown);
-
-    final attackKey = keysPressed.contains(LogicalKeyboardKey.keyZ);
-
-    if (attackKey && timer > attackCD) {
-      projectileAttack();
-      addToScore(1);
-      timer = 0;
-    }
-
-    horizontalMovement += isLeftKeyPressed ? -1 : 0;
-    horizontalMovement += isRightKeyPressed ? 1 : 0;
-
-    verticalMovement += isUpKeyPressed ? -1 : 0;
-    verticalMovement += isDownKeyPressed ? 1 : 0;
-
-    if (horizontalMovement != 0 || verticalMovement != 0) {
-      lastFacingDirection = Vector2(horizontalMovement, verticalMovement);
-    }
-
-    // hasJumped = keysPressed.contains(LogicalKeyboardKey.space);
-    return super.onKeyEvent(event, keysPressed);
   }
 
   void _updatePlayerMovement(double dt) {
@@ -243,26 +243,34 @@ class Player extends Actor with KeyboardHandler {
     velocity.x = horizontalMovement;
     velocity.y = verticalMovement;
 
-    position += velocity * moveSpeed * dt;
+    position += velocity * moveSpeed * dt * moveSpeedAdjust;
   }
 
   void projectileAttack() {
+    // Future.delayed(const Duration(milliseconds: 10), () {
+    game.audio.playSfx('laserShoot.wav');
+
     Projectile projectile = Projectile(
-      game.images.fromCache('Items/Fruits/Apple.png'),
-      size: Vector2.all(16 * bulletSize),
+      size: Vector2.all(24 * bulletSize),
       position: position.clone() -
           Vector2(0, (size.x.clamp(hitboxMin, hitboxMax / 2) / 2)),
       direction: game.joystickAttack.isDragged
           ? game.joystickAttack.delta
           : lastFacingDirection,
-      shadowOffsetY: size.x.clamp(hitboxMin, hitboxMax / 2) /
-          2, //(positionOffset.y * height / 2) / 2 - (bulletSize / 2),
+      shadowOffsetY: size.x.clamp(hitboxMin, hitboxMax / 2) / 2,
+      speed: bulletSpeed,
+      range: bulletRange,
+      powerup: powerup,
+
+      //(positionOffset.y * height / 2) / 2 - (bulletSize / 2),
 
       // can add to player by ( add(component); ). maybe extra body part / costume / obital shielf and weapon
       // position: Vector2.all(16),
     );
 
     game.cam.world!.add(projectile);
+
+    // updateHP(-30);
     // add(projectile);
 
     // problem : world coord 0,0 at center
@@ -272,17 +280,26 @@ class Player extends Actor with KeyboardHandler {
     // and layer to fix
 
     // add(projectile);
+    // }
+    // );
   }
 
   void reset() {
     playerData.character = 'Ninja Frog';
-
-    playerData.hp = 10;
     playerData.sizeOffset = 1;
-    playerData.moveSpeed = 100;
+
+    playerData.hp = 100;
+    playerData.attack = 10;
+    playerData.moveSpeed = 150;
 
     playerData.bulletSize = 1;
     playerData.bulletSpeed = 150;
+    playerData.bulletRange = 400;
+
+    playerData.money = 0;
+    playerData.powerup = [];
+
+    playerData.save();
   }
 
   void addToScore(int points) {
@@ -297,25 +314,110 @@ class Player extends Actor with KeyboardHandler {
 
   void setData(PlayerData playerData) {
     character = playerData.character;
+    sizeOffset = 1;
 
     hp = playerData.hp;
-    sizeOffset = playerData.sizeOffset;
-
+    attack = playerData.attack;
     moveSpeed = playerData.moveSpeed;
 
     bulletSize = playerData.bulletSize;
     bulletSpeed = playerData.bulletSpeed;
+    bulletRange = playerData.bulletRange;
+
+    money = playerData.money;
+    powerup = playerData.powerup;
+
+    status['hp'] = hp;
+
+    status['attack'] = attack;
+    status['moveSpeed'] = moveSpeed;
+    //
+    status['bulletSize'] = bulletSize;
+    status['bulletSpeed'] = bulletSpeed;
+    status['bulletRange'] = bulletRange;
 
     // item etc
   }
 
-  void updateData() {
-    game.updateData.value += 1;
+  void savePlayerHive() {
+    playerData.character = 'Ninja Frog';
+    playerData.sizeOffset = 1.0;
 
+    playerData.hp = double.parse(hp.toStringAsFixed(0));
+    ;
+    playerData.attack = attack;
+    playerData.moveSpeed = moveSpeed;
+
+    playerData.bulletSize = double.parse(bulletSize.toStringAsFixed(1));
+    playerData.bulletSpeed = bulletSpeed;
+    playerData.bulletRange = bulletRange;
+
+    playerData.money = money;
+    playerData.powerup = powerup;
+
+    print('save player stats : ${playerData}');
+
+    playerData.save();
+  }
+
+  void updateHiveData() {
     playerData.hp = hp;
     playerData.sizeOffset = sizeOffset;
 
+    print('hive save player data');
+
     playerData.save();
     // hp
+  }
+
+  void updateHP(double value) {
+    if (value < 0) {
+      game.audio.playSfx('hitHurt.wav');
+    }
+    if (value > 0) {
+      game.audio.playSfx('heal.wav');
+    }
+    hp += value;
+    hp = double.parse(hp.toStringAsFixed(0));
+    hp = hp.clamp(0, 100);
+    status['hp'] = hp;
+
+    // notifier for hud update
+    game.updateData.value += 1;
+  }
+
+  void updateStats(double value, String type) {
+    switch (type) {
+      case 'attack':
+        attack += value;
+        status['attack'] = attack;
+        break;
+      case 'moveSpeed':
+        moveSpeed += value;
+        moveSpeed = moveSpeed.clamp(150, 400);
+        status['moveSpeed'] = moveSpeed;
+        break;
+      case 'bulletSize':
+        bulletSize += double.parse(value.toStringAsFixed(1));
+        status['bulletSize'] = bulletSize;
+        break;
+      case 'bulletSpeed':
+        bulletSpeed += value;
+        status['bulletSpeed'] = bulletSpeed;
+        break;
+      case 'bulletRange':
+        bulletRange += value;
+        status['bulletRange'] = bulletRange;
+        break;
+      default:
+    }
+  }
+
+  void deathCheck() {
+    if (hp <= 0) {
+      print('death message');
+      game.pauseEngine();
+      game.overlays.add(GameOverMenu.id);
+    }
   }
 }
